@@ -89,7 +89,106 @@ function dataPlot(data)
 end
 
 
+
+# Main script
+function mainScript()
+    fileName = "./data/Bacteria/test.txt"
+    data_loaded = false
+    current_bacteria_filter = missing
+    low_growth_rate_filter, upper_growth_rate_filter = (missing, missing)
+    filter_status = false
+    data_frame = DataFrame()
+    while true
+        println("Please enter a number from the following options.")
+        println("1. Load data")
+        println("2. Filter data")
+        println("3. Display statistics")
+        println("4. Generate plots")
+        println("5. Quit")
+        print("The choice: ")
+        inp_num = readline()
+        try
+	          inp_num = parse(Int, inp_num)
+            if inp_num ∈ [1, 2, 3, 4, 5]
+                if inp_num == 5
+                    println("Goodbye!")
+                    break
+                else
+                    if inp_num ∈ [2, 3, 4]
+                        if data_loaded
+                            println("Good choice!")
+                            println("Running...")
+                            if filter_status
+                                println("The current filters are as follows.")
+                                println("Bacteria filter: ", current_bacteria_filter)
+                                println("Growth rate filter is between ", low_growth_rate_filter, " and ", upper_growth_rate_filter)
+                            end
+                            if inp_num == 2
+                                println("You asked to filter the data")
+                                println("Input bacteria names separated by a comma for the filter to be applied")
+                                println("Available bacteria names in the data for filtering")
+                                println(join(unique(data_frame[!, "Bacteria"]), "\n"))
+                                println("Choose a bacteria to filter, separated by \",\" if more than one: ")
+                                bacteria_types = readline()
+                                bacteria_types_filter_list = [strip(bacteria_type) for bacteria_type in split(bacteria_types,",")]
+                                println("Enter the growth rate filter values. Between 0 and 1.")
+                                println("Growth rate - lower bound: ")
+                                low_gr = readline()
+                                gr_lower = parse(Float64, low_gr)
+                                println("\n")
+                                println("Growth rate - upper bound: ")
+                                high_gr = readline()
+                                gr_upper = parse(Float64, high_gr)
+                                # Apply the filters
+                                println("Applying the filters...")
+                                # Applying filters to data_frame
+                                data_frame = filter(row -> row.Bacteria ∈ bacteria_types_filter_list, data_frame)
+                                data_frame = data_frame[gr_lower .< data_frame[!, "Growth rate"] .< gr_upper, :]
+                                # Change filter status
+                                filter_status = true
+                                current_bacteria_filter = bacteria_types_filter_list
+                                low_growth_rate_filter, upper_growth_rate_filter = (gr_lower, gr_upper)
+                                println("Filtering done")
+                            elseif inp_num == 3
+                                println("Calculating statistics now ...")
+                                println("Choose a statistic you would like to display:")
+                                println("Mean Temperature \n",
+                                        "Mean Growth rate \n",
+                                        "Std Temperature \n",
+                                        "Std Growth rate \n",
+                                        "Rows \n",
+                                        "Mean Cold Growth rate \n",
+                                        "Mean Hot Growth rate \n")
+                                stat = readline()
+                                stat_value = dataStatistics(data_frame, stat)
+                                println("The data statistic ", stat, " is ", stat_value)
+                            elseif inp_num == 4
+                                dataPlot(data_frame)
+                            end
+                        else
+                            println("You haven't loaded the data yet. First load it at the menu")
+                            continue
+                        end
+                    else
+                        println("Loading the data...")
+                        data_frame = dataLoad(fileName)
+                        data_loaded = true
+                        filter_status = false
+                    end
+                end
+            end
+        catch MethodError
+            println("The number should be between 1 and 5. Try again")
+            continue
+        end
+    end
+end
+
+
+# Testing methods
 # # Run the file
-fileName = "./data/Bacteria/test.txt"
-data_df = dataLoad(fileName)
-dataPlot(data_df)
+# fileName = "./data/Bacteria/test.txt"
+# data_df = dataLoad(fileName)
+# dataPlot(data_df)
+
+mainScript()
