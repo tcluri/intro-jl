@@ -73,3 +73,88 @@ function gradesPlot(grades)
     ylabel!("Grading scale")
     savefig("./plots/grades-per-assignment.svg")
 end
+
+using CSV
+using DataFrames
+# Main script
+function mainScript()
+    println("Welcome!")
+    function readFile()
+        file_name = ""
+        while true
+            file_name = readline()
+            println("Enter the name of the file that contains grades of assignments of students: ", file_name)
+            if isfile(file_name)
+                println("File exists")
+                break
+            else
+                println("File doesn't exist. Try again")
+            end
+        end
+        file_data = CSV.File(file_name) |> DataFrame
+        rows, cols = size(file_data)
+        println("Number of students are ", rows)
+        println("Number of assignments for each student are ", cols-2)
+        return file_data, rows, cols
+    end
+    file_data, rows, cols = readFile()
+    while true
+        println("Please enter a number from the following options.")
+        println("1. Load data")
+        println("2. Check for data errors")
+        println("3. Generate plots")
+        println("4. Display list of grades")
+        println("5. Quit")
+        inp_num = readline()
+        print("The choice: ", inp_num)
+        try
+	          inp_num = parse(Int, inp_num)
+            if inp_num ∈ [1, 2, 3, 4, 5]
+                if inp_num == 5
+                    println("Goodbye!")
+                    break
+                else
+                    if inp_num ∈ [2, 3, 4]
+                        if inp_num == 2
+                            println("Checking for data errors...")
+                            # Check if two students in the data have the same student id
+                            id_freq = countmap(file_data[!, "StudentID"])
+                            for (key, value) in id_freq
+                                if value > 1
+                                    println("Students whose student id is the same!!")
+                                    println(file_data[file_data[!, "StudentID"] .== key, :])
+                                else
+                                    continue
+                                end
+                            end
+                            # Check if the grades are not in the 7-step scale
+                            get_req_cols = names(file_data)[3:end]
+                            grade_check = file_data[!, get_req_cols]
+                            for (ind, row) in enumerate(grade_check)
+                                row_check =  -3 .<= row .<= 12
+                                if ~all(row_check)
+                                    println("Error in grades in row number: ", ind)
+                                    println(file_data[ind, :])
+                                end
+                            end
+                        elseif inp_num == 3
+                            gradesPlot(Matrix(file_data[:, 3:end]))
+                        elseif inp_num == 4
+                            # List of grades by each assignment
+                            file_data[!, "Final grade"] = computeFinalGrades(Matrix(file_data[:, 3:end]))
+                            sort!(file_data, [:Name])
+                            # Printing the dataframe itself instead of neat strings
+                            println(file_data)
+                        end
+                    else
+                        println("Loading the data...")
+                        file_data, rows, cols = readFile()
+                    end
+                end
+            end
+        catch MethodError
+            println("The number should be between 1 and 5. Try again")
+            continue
+        end
+    end
+end
