@@ -82,8 +82,8 @@ function mainScript()
     function readFile()
         file_name = ""
         while true
+            println("Enter the name of the file that contains grades of assignments of students: ")
             file_name = readline()
-            println("Enter the name of the file that contains grades of assignments of students: ", file_name)
             if isfile(file_name)
                 println("File exists")
                 break
@@ -105,8 +105,8 @@ function mainScript()
         println("3. Generate plots")
         println("4. Display list of grades")
         println("5. Quit")
+        println("The choice: ")
         inp_num = readline()
-        print("The choice: ", inp_num)
         try
 	          inp_num = parse(Int, inp_num)
             if inp_num ∈ [1, 2, 3, 4, 5]
@@ -158,3 +158,5 @@ function mainScript()
         end
     end
 end
+
+mainScript()
